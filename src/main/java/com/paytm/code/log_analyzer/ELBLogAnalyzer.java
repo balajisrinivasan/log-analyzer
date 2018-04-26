@@ -60,8 +60,10 @@ public class ELBLogAnalyzer implements Serializable {
 	//finds count of unique hits per session and writes it to a file
 	//combination of session and url is a key and this method determines the count of keys
 	private void findUniqueHitsCount(Dataset<ELBLogRow> sourceDataset) {
-		sourceDataset.toJavaRDD().mapToPair(row->new Tuple2<String, Integer>(row.getSession() + "-" + row.getUrl(), 1))
-							.reduceByKey((a,b)->a+b).saveAsTextFile("src/main/resources/uniqueHitsCount.out");
+		sourceDataset.toJavaRDD().map(row->row.getSession() + "|" + row.getUrl()).distinct()
+							.mapToPair(session -> new Tuple2<String, Integer>(session.substring(0,33), 1))
+							.reduceByKey((a,b)->a+b)
+							.saveAsTextFile("src/main/resources/uniqueHitsCount.out");
 	}
 
 	//find the longest session in a session window and writes it to a file
